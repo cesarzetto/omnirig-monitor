@@ -1,0 +1,42 @@
+name: Build & Verify Portable Windows Binary
+
+on:
+  push:
+    branches: [ "main" ]
+    tags: [ "v*.*.*" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  build-windows-portable:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Install Stable Rust Toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Rust Cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: "src-tauri -> target"
+
+      - name: Build Optimized Portable Executable
+        run: cargo build --release --manifest-path src-tauri/Cargo.toml
+
+      - name: Package Portable ZIP Artifact
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path "portable" | Out-Null
+          Copy-Item "src-tauri/target/release/omnirig-monitor.exe" "portable/OmniRig-Portable.exe" -Force
+          Compress-Archive -Path "portable/OmniRig-Portable.exe", "README.md", "LICENSE" -DestinationPath "portable/OmniRig-Portable-Windows-x64.zip" -Force
+
+      - name: Upload Portable Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: OmniRig-Portable-Windows-x64
+          path: |
+            portable/OmniRig-Portable.exe
+            portable/OmniRig-Portable-Windows-x64.zip

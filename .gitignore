@@ -1,0 +1,18 @@
+# Rust / Tauri build artifacts
+/src-tauri/target/
+/src-tauri/WixTools/
+**/*.rs.bk
+
+# Local portable output binaries (distributed via GitHub Releases)
+/portable/
+
+# Temp benchmark files
+.omnirig_diskmark_temp.bin
+
+# OS & Editor files
+.DS_Store
+Thumbs.db
+Desktop.ini
+.vscode/
+.idea/
+*.log

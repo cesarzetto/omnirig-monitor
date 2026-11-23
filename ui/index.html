@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OmniRig — All-in-One Hardware & Network Suite</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <!-- BARRA LATERAL ESQUERDA -->
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-logo">⚡</div>
+        <div class="brand-text">
+          <h1>OmniRig</h1>
+          <span>PORTABLE SUITE v0.1</span>
+        </div>
+      </div>
+
+      <div class="nav-section-label">PAINEL & MONITORAMENTO</div>
+      <nav class="sidebar-nav">
+        <button class="nav-btn active" data-target="dashboard" onclick="switchView('dashboard')">
+          <span class="nav-icon">📊</span>
+          <span class="nav-title">Home (Cards)</span>
+          <span class="nav-badge">Live</span>
+        </button>
+
+        <div class="nav-section-label">FERRAMENTAS INTEGRADAS</div>
+
+        <button class="nav-btn" data-target="cpu" onclick="openMaximizedCard('cpu')">
+          <span class="nav-icon">🧠</span>
+          <span class="nav-title">CPU-Z & Núcleos</span>
+        </button>
+
+        <button class="nav-btn" data-target="sensors" onclick="openMaximizedCard('sensors')">
+          <span class="nav-icon">🌡️</span>
+          <span class="nav-title">HWiNFO & Sensores</span>
+        </button>
+
+        <button class="nav-btn" data-target="afterburner" onclick="openMaximizedCard('afterburner')">
+          <span class="nav-icon">🚀</span>
+          <span class="nav-title">Afterburner & Perf</span>
+        </button>
+
+        <button class="nav-btn" data-target="memory" onclick="openMaximizedCard('memory')">
+          <span class="nav-icon">💾</span>
+          <span class="nav-title">Memória RAM & Processos</span>
+        </button>
+
+        <button class="nav-btn" data-target="diskmark" onclick="openMaximizedCard('diskmark')">
+          <span class="nav-icon">💿</span>
+          <span class="nav-title">CrystalDiskMark</span>
+        </button>
+
+        <button class="nav-btn" data-target="dirstat" onclick="openMaximizedCard('dirstat')">
+          <span class="nav-icon">🗂️</span>
+          <span class="nav-title">WinDirStat / WizTree</span>
+        </button>
+
+        <button class="nav-btn" data-target="ipscan" onclick="openMaximizedCard('ipscan')">
+          <span class="nav-icon">🌐</span>
+          <span class="nav-title">IP & Port Scanner</span>
+        </button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="polling-control">
+          <label for="poll-interval">Taxa de Atualização</label>
+          <select id="poll-interval" onchange="changePollInterval(this.value)">
+            <option value="500">Ultra Rápido (500ms)</option>
+            <option value="1000" selected>Eco Padrão (1000ms)</option>
+            <option value="2500">Baixo Consumo (2.5s)</option>
+            <option value="0">Pausado (0% CPU)</option>
+          </select>
+        </div>
+        <div class="engine-status">
+          <span class="dot-live" id="engine-dot"></span>
+          <span id="engine-mode-text">Zero-Alloc Polling Ativo</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ÁREA PRINCIPAL DIREITA -->
+    <main class="main-workspace">
+      <!-- TOPBAR DE RESUMO DO SISTEMA -->
+      <header class="topbar">
+        <div class="sys-summary">
+          <div class="sys-pill">
+            <span class="pill-label">HOST</span>
+            <strong id="top-hostname">Detectando...</strong>
+          </div>
+          <div class="sys-pill">
+            <span class="pill-label">OS</span>
+            <strong id="top-os">Windows NT</strong>
+          </div>
+          <div class="sys-pill">
+            <span class="pill-label">LAN IP</span>
+            <strong id="top-ip">192.168.1.x</strong>
+          </div>
+          <div class="sys-pill">
+            <span class="pill-label">UPTIME</span>
+            <strong id="top-uptime">00h 00m</strong>
+          </div>
+        </div>
+
+        <div class="topbar-actions">
+          <button id="btn-back-grid" class="btn-secondary hidden" onclick="restoreDashboardGrid()">
+            ⬅ Voltar para Todos os Cards
+          </button>
+          <button class="btn-outline" onclick="exportReportJson()" title="Exportar Relatório Completo JSON">
+            📥 Exportar Snapshot
+          </button>
+        </div>
+      </header>
+
+      <!-- GRID DE CARDS (HOME DO APP) -->
+      <!-- Qualquer card pode ser maximizado clicando no botão de expandir para ocupar toda a área direita -->
+      <section id="cards-container" class="cards-grid">
+
+        <!-- CARD 1: CPU-Z & PROCESSADOR -->
+        <article class="monitor-card" id="card-cpu" data-card="cpu">
+          <div class="card-header">
+            <div class="card-title-group">
+              <span class="card-icon cpu-accent">🧠</span>
+              <div>
+                <h2>CPU-Z & Processador</h2>
+                <p class="card-subtitle" id="cpu-brand-label">Carregando processador...</p>
+              </div>
+            </div>
+            <div class="card-actions">
+              <span class="metric-highlight cpu-text" id="cpu-usage-badge">0.0%</span>
+              <button class="btn-expand" onclick="toggleCardMaximize('cpu')" title="Maximizar / Restaurar">
+                ⛶
+              </button>
+            </div>
+          </div>
+
+          <div class="card-preview">
+            <div class="kpi-row">
+              <div class="kpi-box">
+                <span class="kpi-label">Clock Médio</span>
+                <strong class="kpi-val" id="cpu-freq-val">0 MHz</strong>
+              </div>
+              <div class="kpi-box">
+                <span class="kpi-label">Núcleos / Threads</span>
+                <strong class="kpi-val" id="cpu-cores-val">0C / 0T</strong>
+              </div>
+              <div class="kpi-box">
+                <span class="kpi-label">Pico Recente</span>
+                <strong class="kpi-val" id="cpu-peak-val">0.0%</strong>
+              </div>
+            </div>
+            <div class="sparkline-wrap">
+              <canvas id="canvas-cpu" width="420" height="85"></canvas>
+            </div>
+          </div>
+
+          <!-- CONTEÚDO DETALHADO (EXIBIDO QUANDO MAXIMIZADO) -->
+          <div class="card-details">
+            <div class="details-divider"></div>
+            <div class="details-grid-2col">
+              <div class="detail-panel">
+                <h3>Carga Individual por Thread / Núcleo Lógico</h3>
+                <div id="cpu-cores-grid" class="cores-bars-grid"></div>
+              </div>
+              <div class="detail-panel">
+                <h3>Especificações de Arquitetura (CPU-Z Profile)</h3>
+                <table class="specs-table">
+                  <tbody>
+                    <tr><td>Modelo do Processador</td><td id="spec-cpu-model">-</td></tr>
+                    <tr><td>Núcleos Físicos</td><td id="spec-cpu-phys">-</td></tr>
+                    <tr><td>Processadores Lógicos (Threads)</td><td id="spec-cpu-log">-</td></tr>
+                    <tr><td>Frequência Base / Atual</td><td id="spec-cpu-clock">-</td></tr>
+                    <tr><td>Sistema Operacional / Kernel</td><td id="spec-cpu-kernel">-</td></tr>
+                    <tr><td>Instruções Suportadas</td><td>x86_64, SSE4.2, AVX, AVX2, AES-NI, VT-x/AMD-V</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <!-- CARD 2: MEMÓRIA RAM & PROCESSOS -->
+        <article class="monitor-card" id="card-memory" data-card="memory">
+          <div class="card-header">
+            <div class="card-title-group">
+              <span class="card-icon ram-accent">💾</span>
+              <div>
+                <h2>Memória RAM & Swap</h2>
+                <p class="card-subtitle" id="ram-subtitle-label">Alocação Física e Virtual</p>
+              </div>
+            </div>
+            <div class="card-actions">
+              <span class="metric-highlight ram-text" id="ram-usage-badge">0.0%</span>
+              <button class="btn-expand" onclick="toggleCardMaximize('memory')" title="Maximizar / Restaurar">
+                ⛶
+              </button>
+            </div>
+          </div>
+
+          <div class="card-preview">
+            <div class="kpi-row">
+              <div class="kpi-box">
+                <span class="kpi-label">Em Uso</span>
+                <strong class="kpi-val" id="ram-used-val">0.0 GB</strong>
+              </div>
+              <div class="kpi-box">
+                <span class="kpi-label">Livre / Disponível</span>
+                <strong class="kpi-val" id="ram-avail-val">0.0 GB</strong>
+              </div>
+              <div class="kpi-box">
+                <span class="kpi-label">Swap / Pagefile</span>
+                <strong class="kpi-val" id="ram-swap-val">0.0 GB</strong>
+              </div>
+            </div>
+            <div class="sparkline-wrap">
+              <canvas id="canvas-ram" width="420" height="85"></canvas>
+            </div>
+          </div>
+
+          <div class="card-details">
+            <div class="details-divider"></div>
+            <div class="detail-panel">
+              <div class="panel-header-inline">
+                <h3>Top Processos Consumidores de Recursos (Tempo Real)</h3>
+                <span class="hint-tag">Atualizado sob demanda apenas quando maximizado para economizar CPU</span>
+              </div>
+              <div class="table-scroll">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>PID</th>
+                      <th>Nome do Processo</th>
+                      <th>Uso de CPU (%)</th>
+                      <th>Memória RAM (MB)</th>
+                    </tr>
+                  </thead>
+                  <tbody id="processes-tbody">
+                    <tr><td colspan="4">Carregando lista de processos...</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <!-- CARD 3: HWiNFO & SENSORES TÉRMICOS -->
+        <article class="monitor-card" id="card-sensors" data-card="sensors">
+          <div class="card-header">
+            <div class="card-title-group">
+              <span class="card-icon sensor-accent">🌡️</span>
+              <div>
+                <h2>HWiNFO & Sensores</h2>
+                <p class="card-subtitle">Temperaturas, Limites Térmicos & Saúde</p>
+              </div>
+            </div>
+            <div class="card-actions">
+              <span class="metric-highlight sensor-text" id="sensor-main-badge">-- °C</span>
+              <button class="btn-expand" onclick="toggleCardMaximize('sensors')" title="Maximizar / Restaurar">
+                ⛶
+              </button>
+            </div>
+          </div>
+
+          <div class="card-preview">
+            <div id="sensors-mini-list" class="sensors-preview-list"></div>
+          </div>
+
+          <div class="card-details">
+            <div class="details-divider"></div>
+            <div class="detail-panel">
+              <h3>Tabela Completa de Telemetria (Estilo HWiNFO64)</h3>
+              <div class="table-scroll">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>Sensor / Componente</th>
+                      <th>Atual</th>
+                      <th>Mínimo</th>
+                      <th>Máximo</th>
+                      <th>Limite Crítico</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody id="hwinfo-full-tbody"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <!-- CARD 4: MSI AFTERBURNER & TELEMETRIA DE PERFORMANCE -->
+        <article class="monitor-card" id="card-afterburner" data-card="afterburner">
+          <div class="card-header">
+            <div class="card-title-group">
+              <span class="card-icon gpu-accent">🚀</span>
+              <div>
+                <h2>Afterburner & Frame/Perf</h2>
+                <p class="card-subtitle">Monitoramento Combinado & Mini-HUD</p>
+              </div>
+            </div>
+            <div class="card-actions">
+              <span class="metric-highlight gpu-text" id="fps-badge">60 FPS</span>
+              <button class="btn-expand" onclick="toggleCardMaximize('afterburner')" title="Maximizar / Restaurar">
+                ⛶
+              </button>
+            </div>
+          </div>
+
+          <div class="card-preview">
+            <div class="kpi-row">
+              <div class="kpi-box">
+                <span class="kpi-label">Frametime UI</span>
+                <strong class="kpi-val" id="frametime-val">16.6 ms</strong>
+              </div>
+              <div class="kpi-box">
+                <span class="kpi-label">Carga Combinada</span>
+                <strong class="kpi-val" id="combined-load-val">0%</strong>
+              </div>
+              <div class="kpi-box">
+                <span class="kpi-label">Overhead do App</span>
+                <strong class="kpi-val" style="color:#22c55e;">&lt; 0.3%</strong>
+              </div>
+            </div>
+            <div class="sparkline-wrap">
+              <canvas id="canvas-fps" width="420" height="85"></canvas>
+            </div>
+          </div>
+
+          <div class="card-details">
+            <div class="details-divider"></div>
+            <div class="details-grid-2col">
+              <div class="detail-panel">
+                <h3>OSD Overlay Preview (RivaTuner Style)</h3>
+                <div class="osd-simulator">
+                  <div class="osd-line"><span class="osd-tag gpu">SYS</span> <span id="osd-fps">60 FPS</span> | <span id="osd-ft">16.6 ms</span></div>
+                  <div class="osd-line"><span class="osd-tag cpu">CPU</span> <span id="osd-cpu-use">0%</span> | <span id="osd-cpu-clk">0 MHz</span></div>
+                  <div class="osd-line"><span class="osd-tag ram">RAM</span> <span id="osd-ram-use">0.0 GB</span> (<span id="osd-ram-pct">0%</span>)</div>
+                  <div class="osd-line"><span class="osd-tag net">NET</span> DOWN <span id="osd-net-rx">0 KB/s</span> | UP <span id="osd-net-tx">0 KB/s</span></div>
+                </div>
+              </div>
+              <div class="detail-panel">
+                <h3>Controles de Perfil de Monitoramento</h3>
+                <p class="panel-desc">Ajuste a prioridade de telemetria para jogos ou benchmarks pesados:</p>
+                <div class="preset-buttons">
+                  <button class="btn-primary" onclick="applyPerfProfile('gaming')">🎮 Modo Gaming (Baixa Latência)</button>
+                  <button class="btn-outline" onclick="applyPerfProfile('silent')">🍃 Modo Eco / Silencioso (2.5s)</button>
+                  <button class="btn-outline" onclick="applyPerfProfile('bench')">⚡ Modo Stress / Benchmark (500ms)</button>
+                </div>
+                <div id="perf-profile-status" class="status-banner">Perfil atual: Balanceado (1000ms)</div>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <!-- CARD 5: CRYSTALDISKMARK & SAÚDE DE DISCOS -->
+        <article class="monitor-card" id="card-diskmark" data-card="diskmark">
+          <div class="card-header">
+            <div class="card-title-group">
+              <span class="card-icon disk-accent">💿</span>
+              <div>
+                <h2>CrystalDisk & Benchmark</h2>
+                <p class="card-subtitle">Unidades de Armazenamento & Velocidade</p>
+              </div>
+            </div>
+            <div class="card-actions">
+              <span class="metric-highlight disk-text" id="disk-count-badge">0 Unidades</span>
+              <button class="btn-expand" onclick="toggleCardMaximize('diskmark')" title="Maximizar / Restaurar">
+                ⛶
+              </button>
+            </div>
+          </div>
+
+          <div class="card-preview">
+            <div id="disks-mini-bars" class="disks-preview-list"></div>
+          </div>
+
+          <div class="card-details">
+            <div class="details-divider"></div>
+            <div class="details-grid-2col">
+              <div class="detail-panel">
+                <h3>Benchmark de Velocidade (CrystalDiskMark Engine)</h3>
+                <div class="bench-controls">
+                  <select id="bench-drive-select"></select>
+                  <select id="bench-size-select">
+                    <option value="32">Bloco Rápido (32 MB)</option>
+                    <option value="64" selected>Padrão (64 MB)</option>
+                    <option value="128">Intenso (128 MB)</option>
+                  </select>
+                  <button id="btn-run-diskmark" class="btn-primary" onclick="triggerDiskBenchmark()">
+                    ▶ Executar Teste SEQ & 4K
+                  </button>
+                </div>
+
+                <div class="diskmark-meter-grid">
+                  <div class="dm-box">
+                    <span class="dm-label">SEQ1M Leitura (Read)</span>
+                    <strong class="dm-val" id="dm-seq-read">-- MB/s</strong>
+                  </div>
+                  <div class="dm-box">
+                    <span class="dm-label">SEQ1M Escrita (Write)</span>
+                    <strong class="dm-val" id="dm-seq-write">-- MB/s</strong>
+                  </div>
+                  <div class="dm-box">
+                    <span class="dm-label">RND4K Leitura (IOPS)</span>
+                    <strong class="dm-val" id="dm-4k-read">-- MB/s</strong>
+                    <small id="dm-4k-read-iops">0 IOPS</small>
+                  </div>
+                  <div class="dm-box">
+                    <span class="dm-label">RND4K Escrita (IOPS)</span>
+                    <strong class="dm-val" id="dm-4k-write">-- MB/s</strong>
+                    <small id="dm-4k-write-iops">0 IOPS</small>
+                  </div>
+                </div>
+              </div>
+
+              <div class="detail-panel">
+                <h3>Unidades Montadas & Partições</h3>
+                <div id="disks-detailed-table" class="table-scroll"></div>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <!-- CARD 6: WINDIRSTAT / WIZTREE (ANALISADOR DE ESPAÇO) -->
+        <article class="monitor-card" id="card-dirstat" data-card="dirstat">
+          <div class="card-header">
+            <div class="card-title-group">
+              <span class="card-icon dir-accent">🗂️</span>
+              <div>
+                <h2>WinDirStat / Analisador</h2>
+                <p class="card-subtitle">Mapeamento Visual de Pastas e Arquivos Pesados</p>
+              </div>
+            </div>
+            <div class="card-actions">
+              <button class="btn-expand" onclick="toggleCardMaximize('dirstat')" title="Maximizar / Restaurar">
+                ⛶
+              </button>
+            </div>
+          </div>
+
+          <div class="card-preview">
+            <p class="preview-helper">Analise rapidamente qualquer pasta para descobrir o que está consumindo espaço no SSD/HD com mapa visual de blocos (Treemap).</p>
+            <div class="quick-input-row">
+              <input type="text" id="dirstat-path-input" value="C:\" placeholder="Ex: C:\Users" />
+              <button class="btn-primary" onclick="openAndRunDirStat()">🔍 Analisar</button>
+            </div>
+            <div id="dirstat-mini-treemap" class="mini-treemap"></div>
+          </div>
+
+          <div class="card-details">
+            <div class="details-divider"></div>
+            <div class="detail-panel">
+              <h3>Mapa Visual de Alocação (Treemap) & Lista de Diretórios</h3>
+              <div id="dirstat-full-treemap" class="full-treemap"></div>
+              <div class="table-scroll" style="margin-top:14px;">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>Nome da Pasta / Arquivo</th>
+                      <th>Tipo</th>
+                      <th>Arquivos</th>
+                      <th>Tamanho (MB)</th>
+                      <th>% do Diretório</th>
+                    </tr>
+                  </thead>
+                  <tbody id="dirstat-tbody">
+                    <tr><td colspan="5">Clique em "Analisar" para escanear o diretório selecionado.</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <!-- CARD 7: IP SCANNER & TRÁFEGO DE REDE -->
+        <article class="monitor-card" id="card-ipscan" data-card="ipscan">
+          <div class="card-header">
+            <div class="card-title-group">
+              <span class="card-icon net-accent">🌐</span>
+              <div>
+                <h2>IP Scanner & Rede LAN</h2>
+                <p class="card-subtitle">Tráfego em Tempo Real & Descoberta de Hosts</p>
+              </div>
+            </div>
+            <div class="card-actions">
+              <span class="metric-highlight net-text" id="net-speed-badge">0 KB/s</span>
+              <button class="btn-expand" onclick="toggleCardMaximize('ipscan')" title="Maximizar / Restaurar">
+                ⛶
+              </button>
+            </div>
+          </div>
+
+          <div class="card-preview">
+            <div class="kpi-row">
+              <div class="kpi-box">
+                <span class="kpi-label">Download (RX)</span>
+                <strong class="kpi-val" id="net-rx-val">0.0 KB/s</strong>
+              </div>
+              <div class="kpi-box">
+                <span class="kpi-label">Upload (TX)</span>
+                <strong class="kpi-val" id="net-tx-val">0.0 KB/s</strong>
+              </div>
+              <div class="kpi-box">
+                <span class="kpi-label">Total Sessão</span>
+                <strong class="kpi-val" id="net-total-val">0 MB</strong>
+              </div>
+            </div>
+            <div class="sparkline-wrap">
+              <canvas id="canvas-net" width="420" height="85"></canvas>
+            </div>
+          </div>
+
+          <div class="card-details">
+            <div class="details-divider"></div>
+            <div class="details-grid-2col">
+              <div class="detail-panel">
+                <h3>Angry IP & Port Scanner Assíncrono (254 Hosts em Paralelo)</h3>
+                <div class="bench-controls">
+                  <input type="text" id="ipscan-subnet-input" value="192.168.1" placeholder="Prefixo sub-rede (ex: 192.168.1)" />
+                  <button id="btn-run-ipscan" class="btn-primary" onclick="triggerSubnetScan()">
+                    📡 Escanear Sub-rede (/24)
+                  </button>
+                </div>
+                <div class="table-scroll">
+                  <table class="data-table">
+                    <thead>
+                      <tr>
+                        <th>Endereço IP</th>
+                        <th>Latência</th>
+                        <th>Portas Abertas</th>
+                        <th>Identificação</th>
+                      </tr>
+                    </thead>
+                    <tbody id="ipscan-tbody">
+                      <tr><td colspan="4">Informe o prefixo da sua rede e clique em Escanear.</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <div class="detail-panel">
+                <h3>Adaptadores de Rede Ativos</h3>
+                <div class="table-scroll">
+                  <table class="data-table">
+                    <thead>
+                      <tr>
+                        <th>Interface</th>
+                        <th>MAC Address</th>
+                        <th>RX Total</th>
+                        <th>TX Total</th>
+                      </tr>
+                    </thead>
+                    <tbody id="net-interfaces-tbody"></tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </article>
+
+      </section>
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
